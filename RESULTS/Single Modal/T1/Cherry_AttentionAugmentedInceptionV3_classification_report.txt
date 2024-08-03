@@ -1,0 +1,25 @@
+                                                    precision    recall  f1-score   support
+
+                            Corn_(maize)___healthy       1.00      1.00      1.00       116
+                              Tomato___Target_Spot       0.95      1.00      0.97       141
+                              Tomato___Late_blight       0.96      0.92      0.94       191
+                      Tomato___Tomato_mosaic_virus       0.95      0.97      0.96        38
+                            Pepper,_bell___healthy       0.99      0.97      0.98       148
+          Orange___Haunglongbing_(Citrus_greening)       1.00      1.00      1.00       551
+                                Tomato___Leaf_Mold       0.94      1.00      0.97        96
+                           Tomato___Bacterial_spot       1.00      0.96      0.98       213
+                             Tomato___Early_blight       1.00      0.86      0.92       100
+                       Corn_(maize)___Common_rust_       1.00      1.00      1.00       120
+                                  Tomato___healthy       1.00      0.99      1.00       160
+            Tomato___Tomato_Yellow_Leaf_Curl_Virus       0.99      1.00      1.00       536
+               Corn_(maize)___Northern_Leaf_Blight       0.93      0.81      0.86        99
+     Tomato___Spider_mites Two-spotted_spider_mite       0.99      0.99      0.99       168
+                     Pepper,_bell___Bacterial_spot       0.92      0.99      0.95       100
+                       Tomato___Septoria_leaf_spot       0.94      0.93      0.93       178
+                           Squash___Powdery_mildew       0.99      1.00      0.99       184
+Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot       0.70      0.92      0.79        52
+                                 Soybean___healthy       1.00      1.00      1.00       509
+
+                                          accuracy                           0.98      3700
+                                         macro avg       0.96      0.96      0.96      3700
+                                      weighted avg       0.98      0.98      0.98      3700
