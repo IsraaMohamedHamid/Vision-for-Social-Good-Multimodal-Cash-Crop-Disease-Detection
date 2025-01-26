@@ -1,0 +1,55 @@
+---------------------------------------------------- Fusion Method: intermediate ----------------------------------------------------
+-------------------------------- CSV Model Type: small --------------------------------
+Training InceptionV3 with intermediate fusion and CSV extractor small
+InceptionV3 with intermediate fusion and CSV extractor small Test Loss: 0.3684, Test Accuracy: 93.75%
+
+Training ResNet152 with intermediate fusion and CSV extractor small
+ResNet152 with intermediate fusion and CSV extractor small Test Loss: 0.6574, Test Accuracy: 93.75%
+
+Training VGG19 with intermediate fusion and CSV extractor small
+VGG19 with intermediate fusion and CSV extractor small Test Loss: 0.8472, Test Accuracy: 59.38%
+
+Training ViT with intermediate fusion and CSV extractor small
+ViT with intermediate fusion and CSV extractor small Test Loss: 0.3478, Test Accuracy: 90.62%
+
+Training AttentionAugmentedInceptionV3 with intermediate fusion and CSV extractor small
+AttentionAugmentedInceptionV3 with intermediate fusion and CSV extractor small Test Loss: 0.3300, Test Accuracy: 93.75%
+
+Training AttentionAugmentedResNet18 with intermediate fusion and CSV extractor small
+AttentionAugmentedResNet18 with intermediate fusion and CSV extractor small Test Loss: 0.4056, Test Accuracy: 93.75%
+
+
+-------------------------------- CSV Model Type: medium --------------------------------
+Training InceptionV3 with intermediate fusion and CSV extractor medium
+InceptionV3 with intermediate fusion and CSV extractor medium Test Loss: 0.5515, Test Accuracy: 87.50%
+
+Training ResNet152 with intermediate fusion and CSV extractor medium
+ResNet152 with intermediate fusion and CSV extractor medium Test Loss: 0.2363, Test Accuracy: 93.75%
+
+Training VGG19 with intermediate fusion and CSV extractor medium
+VGG19 with intermediate fusion and CSV extractor medium Test Loss: 0.3769, Test Accuracy: 93.75%
+
+Training ViT with intermediate fusion and CSV extractor medium
+ViT with intermediate fusion and CSV extractor medium Test Loss: 0.2296, Test Accuracy: 96.88%
+
+Training AttentionAugmentedInceptionV3 with intermediate fusion and CSV extractor medium
+AttentionAugmentedInceptionV3 with intermediate fusion and CSV extractor medium Test Loss: 3.1540, Test Accuracy: 90.62%
+
+Training AttentionAugmentedResNet18 with intermediate fusion and CSV extractor medium
+AttentionAugmentedResNet18 with intermediate fusion and CSV extractor medium Test Loss: 0.2936, Test Accuracy: 93.75%
+
+
+-------------------------------- CSV Model Type: conv_small --------------------------------
+Training InceptionV3 with intermediate fusion and CSV extractor conv_small
+InceptionV3 with intermediate fusion and CSV extractor conv_small Test Loss: 0.8627, Test Accuracy: 93.75%
+
+Training ResNet152 with intermediate fusion and CSV extractor conv_small
+ResNet152 with intermediate fusion and CSV extractor conv_small Test Loss: 0.4638, Test Accuracy: 93.75%
+
+Training VGG19 with intermediate fusion and CSV extractor conv_small
+VGG19 with intermediate fusion and CSV extractor conv_small Test Loss: 0.3126, Test Accuracy: 93.75%
+
+Training ViT with intermediate fusion and CSV extractor conv_small
+ViT with intermediate fusion and CSV extractor conv_small Test Loss: 0.2977, Test Accuracy: 93.75%
+
+Training AttentionAugmentedInceptionV3 with intermediate fusion and CSV extractor conv_small

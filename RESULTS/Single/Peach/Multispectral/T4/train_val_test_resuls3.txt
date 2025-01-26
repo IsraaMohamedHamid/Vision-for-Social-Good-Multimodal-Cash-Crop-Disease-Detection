@@ -1,0 +1,19 @@
+--------------- Training model: InceptionV3
+InceptionV3 Test Loss: 0.2173, Test Accuracy: 89.47%
+
+--------------- Training model: ResNet152
+ResNet152 Test Loss: 0.0785, Test Accuracy: 97.37%
+
+--------------- Training model: VGG19
+VGG19 Test Loss: 1.5892, Test Accuracy: 68.42%
+
+--------------- Training model: ViT
+ViT Test Loss: 0.2944, Test Accuracy: 81.58%
+
+--------------- Training model: AttentionAugmentedInceptionV3
+AttentionAugmentedInceptionV3 Test Loss: 0.2907, Test Accuracy: 92.11%
+
+--------------- Training model: AttentionAugmentedResNet18
+AttentionAugmentedResNet18 Test Loss: 0.2066, Test Accuracy: 92.11%
+
+----------------------------------------------------------------------------------------------------------------------

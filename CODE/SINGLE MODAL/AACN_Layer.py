@@ -205,53 +205,107 @@ class RelativeLogits(nn.Module):
         return rel_logits
 
 class AACN_VGG_Layer(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, num_heads):
+    def __init__(self, in_channels, k=0.25, v=0.25, kernel_size=3, num_heads=8, image_size=224, inference=False):
         super(AACN_VGG_Layer, self).__init__()
+        self.in_channels = in_channels
+        self.kernel_size = kernel_size
         self.num_heads = num_heads
-        self.channels = in_channels // num_heads
+        self.dk = math.floor((in_channels * k) / num_heads) * num_heads
+        if self.dk / num_heads < 20:
+            self.dk = num_heads * 20
+        self.dv = math.floor((in_channels * v) / num_heads) * num_heads
         
-        # Define convolutional layers
-        self.conv1 = nn.Conv2d(in_channels, in_channels, kernel_size=1, padding=0)
-        self.conv2 = nn.Conv2d(in_channels, in_channels, kernel_size=1, padding=0)
-        self.conv3 = nn.Conv2d(in_channels, in_channels, kernel_size=1, padding=0)
+        assert self.dk % self.num_heads == 0, "dk should be divided by num_heads. (example: dk: 32, num_heads: 8)"
+        assert self.dv % self.num_heads == 0, "dv should be divided by num_heads. (example: dv: 32, num_heads: 8)"  
         
-        self.relative_logits = RelativeLogits(height=kernel_size, width=kernel_size, num_heads=num_heads, channels=self.channels)
+        self.padding = (self.kernel_size - 1) // 2
         
+        # VGG-style layers (no residual connections, simple Conv2d layers)
+        self.conv_out = nn.Conv2d(self.in_channels, self.in_channels - self.dv, self.kernel_size, padding=self.padding)
+        self.kqv_conv = nn.Conv2d(self.in_channels, 2 * self.dk + self.dv, kernel_size=1)
+        self.attn_out = nn.Conv2d(self.dv, self.dv, 1)
+        
+        # Positional encodings
+        self.rel_encoding_h = nn.Parameter(torch.randn((2 * image_size - 1, self.dk // self.num_heads), requires_grad=True))
+        self.rel_encoding_w = nn.Parameter(torch.randn((2 * image_size - 1, self.dk // self.num_heads), requires_grad=True))
+        
+        # For accessing attention weights during inference
+        self.inference = inference
+        if self.inference:
+            self.register_parameter('weights', None)
+         
     def forward(self, x):
         batch_size, _, height, width = x.size()
-        q = self.conv1(x)
-        k = self.conv2(x)
-        v = self.conv3(x)
-        
-        q = q.view(batch_size, self.num_heads, self.channels, height, width)
-        k = k.view(batch_size, self.num_heads, self.channels, height, width)
-        v = v.view(batch_size, self.num_heads, self.channels, height, width)
-        
-        qk = torch.einsum('bhxyd,bhxyd->bhxy', q, k)
+        dkh = self.dk // self.num_heads
+        dvh = self.dv // self.num_heads
+        flatten_hw = lambda x, depth: torch.reshape(x, (batch_size, self.num_heads, height * width, depth))
 
-        # Print shapes for debugging
-        # print(f'qk shape: {qk.shape}')
-        # print(f'q shape: {q.shape}')
-        # print(f'k shape: {k.shape}')
+        # Compute q, k, v
+        kqv = self.kqv_conv(x)
+        k, q, v = torch.split(kqv, [self.dk, self.dk, self.dv], dim=1)
+        q = q * (dkh ** -0.5)
         
-        qr_h, qr_w = self.relative_logits(q, height, width)
+        # After splitting, shape is [batch_size, num_heads, height, width, dkh or dvh]
+        k = self.split_heads_2d(k, self.num_heads)
+        q = self.split_heads_2d(q, self.num_heads)
+        v = self.split_heads_2d(v, self.num_heads)
         
-        # Ensure qr_h and qk have the same number of dimensions
-        if qr_h.dim() < qk.dim():
-            # Add singleton dimensions to qr_h to match qk's dimensions
-            while qr_h.dim() < qk.dim():
-                qr_h = qr_h.unsqueeze(-1)
-        elif qr_h.dim() > qk.dim():
-            # Remove singleton dimensions from qr_h to match qk's dimensions
-            while qr_h.dim() > qk.dim():
-                qr_h = qr_h.squeeze(-1)
+        # [batch_size, num_heads, height*width, height*width]
+        qk = torch.matmul(flatten_hw(q, dkh), flatten_hw(k, dkh).transpose(2, 3))
 
-        # Now qr_h and qk should have the same number of dimensions
-        qr_h = qr_h.expand_as(qk)
-        # print(f"qr_h shape after: {qr_h.shape}")
-        
+        qr_h, qr_w = self.relative_logits(q)
         qk += qr_h
         qk += qr_w
+
+        weights = F.softmax(qk, dim=-1)
         
-        qk = torch.softmax(qk, dim=-1)
-        return qk
+        if self.inference:
+            self.weights = nn.Parameter(weights)
+            
+        attn_out = torch.matmul(weights, flatten_hw(v, dvh))
+        attn_out = torch.reshape(attn_out, (batch_size, self.num_heads, self.dv // self.num_heads, height, width))
+        attn_out = self.combine_heads_2d(attn_out)
+        # Project heads
+        attn_out = self.attn_out(attn_out)
+        return torch.cat((self.conv_out(x), attn_out), dim=1)
+
+    def split_heads_2d(self, inputs, num_heads):
+        batch_size, depth, height, width = inputs.size()
+        ret_shape = (batch_size, num_heads, height, width, depth // num_heads)
+        split_inputs = torch.reshape(inputs, ret_shape)
+        return split_inputs
+    
+    def combine_heads_2d(self, inputs):
+        batch_size, num_heads, depth, height, width = inputs.size()
+        ret_shape = (batch_size, num_heads * depth, height, width)
+        return torch.reshape(inputs, ret_shape)
+    
+    def relative_logits(self, q):
+        _, num_heads, height, width, dkh = q.size()
+        rel_logits_w = self.relative_logits_1d(q, self.rel_encoding_w, height, width, num_heads, [0, 1, 2, 4, 3, 5])
+        rel_logits_h = self.relative_logits_1d(torch.transpose(q, 2, 3), self.rel_encoding_h, width, height, num_heads, [0, 1, 4, 2, 5, 3])
+        return rel_logits_h, rel_logits_w
+
+    def relative_logits_1d(self, q, rel_k, height, width, num_heads, transpose_mask):
+        rel_logits = torch.einsum('bhxyd,md->bxym', q, rel_k)
+
+        # Correct calculation of expected elements per batch
+        elements_per_batch = height * width * (2 * width - 1) * num_heads
+
+        # Reshape directly using the known elements per batch
+        rel_logits = rel_logits.view(-1, elements_per_batch)
+        rel_logits = rel_logits.view(-1, height, width, 2 * width - 1, num_heads)
+        rel_logits = self.rel_to_abs(rel_logits)
+
+        return rel_logits
+
+    def rel_to_abs(self, x):
+        batch_size, num_heads, L, _ = x.size()
+        col_pad = torch.zeros((batch_size, num_heads, L, 1)).to(x.device)
+        x = torch.cat((x, col_pad), dim=3)
+        flat_x = torch.reshape(x, (batch_size, num_heads, L * 2 * L))
+        flat_pad = torch.zeros((batch_size, num_heads, L - 1)).to(x.device)
+        flat_x_padded = torch.cat((flat_x, flat_pad), dim=2)
+        final_x = torch.reshape(flat_x_padded, (batch_size, num_heads, L + 1, 2 * L - 1))
+        final_x = final_x[:, :, :L, L - 1:]
+        return final_x

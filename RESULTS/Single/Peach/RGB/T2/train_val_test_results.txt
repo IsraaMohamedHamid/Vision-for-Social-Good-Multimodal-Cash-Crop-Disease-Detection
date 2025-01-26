@@ -1,0 +1,25 @@
+--------------- Training model: InceptionV3
+Loaded model checkpoint from /Users/izzymohamed/Desktop/Vision For Social Good/Project/Vision-For-Social-Good/RESULTS/Single/Peach/RGB/T2/InceptionV3_model_checkpoint.pth
+InceptionV3 Test Loss: 0.1343, Test Accuracy: 97.44%
+
+--------------- Training model: ResNet152
+Loaded model checkpoint from /Users/izzymohamed/Desktop/Vision For Social Good/Project/Vision-For-Social-Good/RESULTS/Single/Peach/RGB/T2/ResNet152_model_checkpoint.pth
+ResNet152 Test Loss: 0.2081, Test Accuracy: 94.87%
+
+--------------- Training model: VGG19
+Loaded model checkpoint from /Users/izzymohamed/Desktop/Vision For Social Good/Project/Vision-For-Social-Good/RESULTS/Single/Peach/RGB/T2/VGG19_model_checkpoint.pth
+VGG19 Test Loss: 0.7194, Test Accuracy: 89.74%
+
+--------------- Training model: ViT
+Loaded model checkpoint from /Users/izzymohamed/Desktop/Vision For Social Good/Project/Vision-For-Social-Good/RESULTS/Single/Peach/RGB/T2/ViT_model_checkpoint.pth
+ViT Test Loss: 0.5202, Test Accuracy: 87.18%
+
+--------------- Training model: AttentionAugmentedInceptionV3
+Loaded model checkpoint from /Users/izzymohamed/Desktop/Vision For Social Good/Project/Vision-For-Social-Good/RESULTS/Single/Peach/RGB/T2/AttentionAugmentedInceptionV3_model_checkpoint.pth
+AttentionAugmentedInceptionV3 Test Loss: 0.5118, Test Accuracy: 92.31%
+
+--------------- Training model: AttentionAugmentedResNet18
+Loaded model checkpoint from /Users/izzymohamed/Desktop/Vision For Social Good/Project/Vision-For-Social-Good/RESULTS/Single/Peach/RGB/T2/AttentionAugmentedResNet18_model_checkpoint.pth
+AttentionAugmentedResNet18 Test Loss: 0.4497, Test Accuracy: 94.87%
+
+----------------------------------------------------------------------------------------------------------------------

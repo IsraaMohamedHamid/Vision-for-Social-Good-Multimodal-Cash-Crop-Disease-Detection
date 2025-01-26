@@ -4,6 +4,7 @@ import torch.nn as nn
 from torchvision import models
 from torchvision.models.efficientnet import MBConv
 from typing import Type, Any, Callable, Union, List, Optional
+import torch.nn.functional as F
 
 from AACN_Layer import AACN_Layer, AACN_EfficientNet_Layer, AACN_VGG_Layer
 
@@ -471,10 +472,58 @@ def attention_augmented_vit(attention: bool = False, **kwargs: Any) -> Attention
     """
     return AttentionAugmentedViT(attention=attention, **kwargs)
 
-class AttentionAugmentedVGG(nn.Module):
-    def __init__(self, features, num_classes=1000, init_weights=True):
-        super(AttentionAugmentedVGG, self).__init__()
-        self.features = features
+######################################################### VGG #########################################################
+
+def vgg_conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
+    """3x3 convolution with padding"""
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+                     padding=dilation, groups=groups, bias=False, dilation=dilation)
+
+
+class VGGBlock(nn.Module):
+    def __init__(self, in_channels: int, out_channels: int, num_convs: int = 2, attention: bool = False, num_heads: int = 8, k: float = 0.25, v: float = 0.25, image_size: int = 224, inference: bool = False):
+        super(VGGBlock, self).__init__()
+        layers = []
+        for _ in range(num_convs):
+            layers.append(vgg_conv3x3(in_channels, out_channels))
+            layers.append(nn.BatchNorm2d(out_channels))
+            layers.append(nn.ReLU(inplace=True))
+            in_channels = out_channels
+        if attention:
+            layers.append(AACN_Layer(in_channels=out_channels, k=k, v=v, kernel_size=3, num_heads=num_heads, image_size=image_size, inference=inference))
+        self.block = nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.block(x)
+
+
+class VGG(nn.Module):
+    def __init__(
+        self,
+        num_classes: int = 1000,
+        attention: List[bool] = [False, False, False, False, False],
+        num_heads: int = 8,
+        k: float = 0.25,
+        v: float = 0.25,
+        image_size: int = 224,
+        inference: bool = False
+    ) -> None:
+        super(VGG, self).__init__()
+        
+        # VGG-like architecture
+        self.features = nn.Sequential(
+            VGGBlock(3, 64, num_convs=2, attention=attention[0], num_heads=num_heads, k=k, v=v, image_size=image_size, inference=inference),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            VGGBlock(64, 128, num_convs=2, attention=attention[1], num_heads=num_heads, k=k, v=v, image_size=image_size//2, inference=inference),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            VGGBlock(128, 256, num_convs=3, attention=attention[2], num_heads=num_heads, k=k, v=v, image_size=image_size//4, inference=inference),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            VGGBlock(256, 512, num_convs=3, attention=attention[3], num_heads=num_heads, k=k, v=v, image_size=image_size//8, inference=inference),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            VGGBlock(512, 512, num_convs=3, attention=attention[4], num_heads=num_heads, k=k, v=v, image_size=image_size//16, inference=inference),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 4096),
@@ -485,51 +534,37 @@ class AttentionAugmentedVGG(nn.Module):
             nn.Dropout(),
             nn.Linear(4096, num_classes),
         )
-        if init_weights:
-            self._initialize_weights()
 
-    def forward(self, x):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
 
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.BatchNorm2d):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
-                nn.init.constant_(m.bias, 0)
 
-def attention_augmented_vgg(model_name='VGG16', num_classes=4, init_weights=True):
-    cfgs = {
-        'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-        'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-        'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-        'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
-    }
+def attention_augmented_vgg11(attention: List[bool] = [False]*5, **kwargs: Any) -> VGG:
+    """VGG 11-layer model (configuration "A")"""
+    return VGG(attention=attention, **kwargs)
 
-    def _make_layers(cfg, in_channels=3):
-        layers = []
-        for v in cfg:
-            if v == 'M':
-                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
-            else:
-                conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
-                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
-                in_channels = v
-        layers += [AACN_VGG_Layer(in_channels, in_channels, kernel_size=3, num_heads=8)]
-        return nn.Sequential(*layers)
 
-    assert model_name in cfgs, f"Model {model_name} not recognized. Available models: {list(cfgs.keys())}"
-    cfg = cfgs[model_name]
-    features = _make_layers(cfg)
-    model = AttentionAugmentedVGG(features, num_classes=num_classes, init_weights=init_weights)
-    return model
+def attention_augmented_vgg13(attention: List[bool] = [False]*5, **kwargs: Any) -> VGG:
+    """VGG 13-layer model (configuration "B")"""
+    return VGG(attention=attention, **kwargs)
+
+
+def attention_augmented_vgg16(attention: List[bool] = [False]*5, **kwargs: Any) -> VGG:
+    """VGG 16-layer model (configuration "D")"""
+    return VGG(attention=attention, **kwargs)
+
+
+def attention_augmented_vgg19(attention: List[bool] = [False]*5, **kwargs: Any) -> VGG:
+    """VGG 19-layer model (configuration "E")"""
+    return VGG(attention=attention, **kwargs)

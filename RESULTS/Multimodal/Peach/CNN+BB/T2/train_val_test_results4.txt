@@ -1,0 +1,43 @@
+---------------------------------------------------- Fusion Method: late ----------------------------------------------------
+-------------------------------- CSV Model Type: conv_small --------------------------------
+Training InceptionV3 with late fusion and CSV extractor conv_small
+InceptionV3 with late fusion and CSV extractor conv_small Test Loss: 0.9239, Test Accuracy: 64.86%
+
+Training ResNet152 with late fusion and CSV extractor conv_small
+ResNet152 with late fusion and CSV extractor conv_small Test Loss: 18.1288, Test Accuracy: 43.24%
+
+Training VGG19 with late fusion and CSV extractor conv_small
+VGG19 with late fusion and CSV extractor conv_small Test Loss: 1.0155, Test Accuracy: 45.95%
+
+Training ViT with late fusion and CSV extractor conv_small
+ViT with late fusion and CSV extractor conv_small Test Loss: 0.4731, Test Accuracy: 81.08%
+
+Training AttentionAugmentedInceptionV3 with late fusion and CSV extractor conv_small
+AttentionAugmentedInceptionV3 with late fusion and CSV extractor conv_small Test Loss: 0.2193, Test Accuracy: 97.30%
+
+Training AttentionAugmentedResNet18 with late fusion and CSV extractor conv_small
+AttentionAugmentedResNet18 with late fusion and CSV extractor conv_small Test Loss: 0.5350, Test Accuracy: 83.78%
+
+
+-------------------------------- CSV Model Type: conv_medium --------------------------------
+Training InceptionV3 with late fusion and CSV extractor conv_medium
+InceptionV3 with late fusion and CSV extractor conv_medium Test Loss: 0.6817, Test Accuracy: 75.68%
+
+Training ResNet152 with late fusion and CSV extractor conv_medium
+ResNet152 with late fusion and CSV extractor conv_medium Test Loss: 6.2457, Test Accuracy: 48.65%
+
+Training VGG19 with late fusion and CSV extractor conv_medium
+VGG19 with late fusion and CSV extractor conv_medium Test Loss: 1.0962, Test Accuracy: 24.32%
+
+Training ViT with late fusion and CSV extractor conv_medium
+ViT with late fusion and CSV extractor conv_medium Test Loss: 0.6181, Test Accuracy: 75.68%
+
+Training AttentionAugmentedInceptionV3 with late fusion and CSV extractor conv_medium
+AttentionAugmentedInceptionV3 with late fusion and CSV extractor conv_medium Test Loss: 0.7181, Test Accuracy: 70.27%
+
+Training AttentionAugmentedResNet18 with late fusion and CSV extractor conv_medium
+AttentionAugmentedResNet18 with late fusion and CSV extractor conv_medium Test Loss: 1.0575, Test Accuracy: 86.49%
+
+
+----------------------------------------------------------------------------------------------------------------------
+

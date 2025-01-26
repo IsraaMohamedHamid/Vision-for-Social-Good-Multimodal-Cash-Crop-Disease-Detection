@@ -1,0 +1,10 @@
+                    precision    recall  f1-score   support
+
+           Healthy       0.14      1.00      0.24         3
+Grapholita molesta       0.00      0.00      0.00        13
+Anarsia lineatella       0.93      0.78      0.85        18
+         Dead Tree       0.00      0.00      0.00         3
+
+          accuracy                           0.46        37
+         macro avg       0.27      0.44      0.27        37
+      weighted avg       0.47      0.46      0.43        37
